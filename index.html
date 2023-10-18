@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendance Tracker</title>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Open or create the WebSQL database
+      var db = openDatabase('attendance', '1.0', 'Attendance Database', 2 * 1024 * 1024);
+
+      // Create the "log" table if it doesn't exist
+      db.transaction(function (tx) {
+        tx.executeSql('CREATE TABLE IF NOT EXISTS log (id INTEGER PRIMARY KEY, type TEXT, timestamp DATETIME)');
+      });
+
+      // Event listener for the "In" button
+      document.getElementById('inBtn').addEventListener('click', function () {
+        logEvent('in');
+      });
+
+      // Event listener for the "Out" button
+      document.getElementById('outBtn').addEventListener('click', function () {
+        logEvent('out');
+      });
+
+      // Event listener for the "Calculate" button
+      document.getElementById('calculateBtn').addEventListener('click', calculateTotalHours);
+
+      // Function to log an event (in or out) into the "log" table
+      function logEvent(type) {
+        db.transaction(function (tx) {
+          var timestamp = new Date().toISOString();
+          tx.executeSql('INSERT INTO log (type, timestamp) VALUES (?, ?)', [type, timestamp]);
+        });
+      }
+
+      // Function to calculate and display total hours
+      function calculateTotalHours() {
+        db.transaction(function (tx) {
+          tx.executeSql('SELECT * FROM log ORDER BY timestamp', [], function (tx, result) {
+            var rows = result.rows;
+            var totalHours = 0;
+
+            for (var i = 0; i < rows.length; i += 2) {
+              // Ensure there's an "in" and "out" pair
+              if (i + 1 < rows.length && rows.item(i).type === 'in' && rows.item(i + 1).type === 'out') {
+                var inTime = new Date(rows.item(i).timestamp);
+                var outTime = new Date(rows.item(i + 1).timestamp);
+
+                var hoursDiff = (outTime - inTime) / (1000 * 60 * 60); // Convert milliseconds to hours
+                totalHours += hoursDiff;
+
+                // Display the in and out times
+                console.log('In: ' + inTime + ', Out: ' + outTime + ', Hours: ' + hoursDiff);
+              }
+            }
+
+            // Display the total hours
+            console.log('Total Hours: ' + totalHours.toFixed(2));
+          });
+        });
+      }
+    });
+  </script>
+</head>
+<body>
+  <h1>Attendance Tracker</h1>
+  <button id="inBtn">In</button>
+  <button id="outBtn">Out</button>
+  <button id="calculateBtn">Calculate</button>
+</body>
+</html>
