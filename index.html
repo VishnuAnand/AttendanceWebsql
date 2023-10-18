@@ -46,7 +46,7 @@
       // Check the last recorded event on page load
       db.transaction(function (tx) {
         tx.executeSql('SELECT * FROM log ORDER BY timestamp DESC LIMIT 1', [], function (tx, result) {
-          var lastEvent = result.rows.item(0);
+          var lastEvent = result.rows.length > 0 ? result.rows.item(0) : null;
 
           if (lastEvent && lastEvent.type === 'in') {
             inBtn.prop('disabled', true);
@@ -145,20 +145,4 @@
 
                 var minutesDiff = (outTime - inTime) / (1000 * 60); // Convert milliseconds to minutes
                 var hoursDiff = minutesDiff / 60; // Convert minutes to hours
-                totalHours += hoursDiff;
-
-                console.log('In: ' + inTime + ', Out: ' + outTime + ', Hours: ' + hoursDiff);
-              }
-            }
-
-            resultDiv.text('Total Hours: ' + totalHours.toFixed(2));
-          });
-        });
-      }
-    });
-  </script>
-</head>
-<body>
-  <!-- Rest of your HTML content -->
-</body>
-</html>
+                totalHours
