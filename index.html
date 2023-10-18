@@ -4,6 +4,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Attendance Tracker</title>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    .in {
+      color: green;
+    }
+
+    .out {
+      color: red;
+    }
+  </style>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       var db = openDatabase('attendance', '1.0', 'Attendance Database', 2 * 1024 * 1024);
@@ -15,17 +40,15 @@
       var inBtn = document.getElementById('inBtn');
       var outBtn = document.getElementById('outBtn');
       var resultDiv = document.getElementById('result');
+      var historyTable = document.getElementById('historyTable');
 
       db.transaction(function (tx) {
-        tx.executeSql('SELECT * FROM log ORDER BY timestamp DESC LIMIT 1', [], function (tx, result) {
-          var lastEvent = result.rows.item(0);
+        tx.executeSql('SELECT * FROM log ORDER BY timestamp DESC', [], function (tx, result) {
+          var rows = result.rows;
 
-          if (lastEvent && lastEvent.type === 'in') {
-            inBtn.disabled = true;
-            outBtn.disabled = false;
-          } else {
-            inBtn.disabled = false;
-            outBtn.disabled = true;
+          for (var i = 0; i < rows.length; i++) {
+            var row = rows.item(i);
+            addToHistoryTable(row.type, new Date(row.timestamp));
           }
         });
       });
@@ -52,13 +75,48 @@
         inBtn.disabled = false;
         outBtn.disabled = true;
         resultDiv.textContent = '';
+        clearHistoryTable();
       });
 
       function logEvent(type) {
         db.transaction(function (tx) {
           var timestamp = new Date().toISOString();
           tx.executeSql('INSERT INTO log (type, timestamp) VALUES (?, ?)', [type, timestamp]);
+
+          // Add the event to the history table
+          addToHistoryTable(type, new Date(timestamp));
         });
+      }
+
+      function addToHistoryTable(type, timestamp) {
+        var row = historyTable.insertRow(1); // Insert at the beginning
+        var cellType = row.insertCell(0);
+        var cellTime = row.insertCell(1);
+
+        cellType.textContent = type.toUpperCase();
+        cellType.className = type; // Set class for styling
+        cellTime.textContent = formatAMPM(timestamp);
+
+        // Clear the result div when a new entry is added
+        resultDiv.textContent = '';
+      }
+
+      function clearHistoryTable() {
+        // Remove all rows except the header
+        while (historyTable.rows.length > 1) {
+          historyTable.deleteRow(1);
+        }
+      }
+
+      function formatAMPM(date) {
+        var hours = date.getHours();
+        var minutes = date.getMinutes();
+        var ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // the hour '0' should be '12'
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        var strTime = hours + ':' + minutes + ' ' + ampm;
+        return strTime;
       }
 
       function calculateTotalHours() {
@@ -94,5 +152,11 @@
   <button id="calculateBtn">Calculate</button>
   <button id="resetBtn">Reset</button>
   <div id="result"></div>
+  <table id="historyTable">
+    <tr>
+      <th>Type</th>
+      <th>Time</th>
+    </tr>
+  </table>
 </body>
 </html>
