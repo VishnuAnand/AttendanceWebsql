@@ -4,8 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Attendance Tracker</title>
+
   <!-- Include Bootstrap CSS -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+
   <style>
     table {
       width: 100%;
@@ -103,8 +105,9 @@
           var timestamp = new Date().toISOString();
           tx.executeSql('INSERT INTO log (type, timestamp) VALUES (?, ?)', [type, timestamp]);
 
-          // Add the event to the history table
-          addToHistoryTable(type, new Date(timestamp));
+          // Clear and re-populate the entire history table
+          clearHistoryTable();
+          loadHistoryTable();
         });
       }
 
@@ -125,6 +128,20 @@
         historyTable.find('tr:gt(0)').remove();
       }
 
+      function loadHistoryTable() {
+        // Load history from the database and populate the table
+        db.transaction(function (tx) {
+          tx.executeSql('SELECT * FROM log ORDER BY timestamp DESC', [], function (tx, result) {
+            var rows = result.rows;
+
+            for (var i = 0; i < rows.length; i++) {
+              var row = rows.item(i);
+              addToHistoryTable(row.type, new Date(row.timestamp));
+            }
+          });
+        });
+      }
+
       function formatAMPM(date) {
         var hours = date.getHours();
         var minutes = date.getMinutes();
@@ -139,33 +156,35 @@
         db.transaction(function (tx) {
           tx.executeSql('SELECT * FROM log ORDER BY timestamp', [], function (tx, result) {
             var rows = result.rows;
-            var totalHours = 0;
+            var totalMilliseconds = 0;
 
             for (var i = 0; i < rows.length; i += 2) {
               if (i + 1 < rows.length && rows.item(i).type === 'in' && rows.item(i + 1).type === 'out') {
                 var inTime = new Date(rows.item(i).timestamp);
                 var outTime = new Date(rows.item(i + 1).timestamp);
 
-                var timeDiff = outTime - inTime;
-                var formattedDiff = formatTimeDifference(timeDiff);
+                totalMilliseconds += outTime - inTime;
 
-                totalHours += timeDiff / (1000 * 60 * 60); // Convert milliseconds to hours
-
-                console.log('In: ' + inTime + ', Out: ' + outTime + ', Hours: ' + formattedDiff);
+                console.log('In: ' + inTime + ', Out: ' + outTime);
               }
             }
 
-            resultDiv.text('Total Hours: ' + totalHours.toFixed(2));
+            var formattedTotal = formatTimeDifference(totalMilliseconds);
+            resultDiv.text('Total Hours: ' + formattedTotal);
           });
         });
       }
 
       function formatTimeDifference(timeDiff) {
-        var hours = Math.floor(timeDiff / (1000 * 60 * 60));
-        var minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-        var seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+        var seconds = Math.floor(timeDiff / 1000);
+        var minutes = Math.floor(seconds / 60);
+        var hours = Math.floor(minutes / 60);
 
-        return hours + ':' + (minutes < 10 ? '0' : '') + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+        var formattedTime = hours + ':' +
+                            (minutes % 60 < 10 ? '0' : '') + (minutes % 60) + ':' +
+                            (seconds % 60 < 10 ? '0' : '') + (seconds % 60);
+
+        return formattedTime;
       }
     });
   </script>
