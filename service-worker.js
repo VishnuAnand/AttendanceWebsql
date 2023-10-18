@@ -2,8 +2,8 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open('attendance-app').then((cache) => {
       return cache.addAll([
-        './index.html',
-        './manifest.json',
+        'index.html',
+        'manifest.json',
         // Add other files you want to cache
       ]);
     })
