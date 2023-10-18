@@ -2,7 +2,7 @@
   "name": "Attendance Tracker",
   "short_name": "Attendance",
   "description": "Track attendance with this app",
-  "start_url": "index.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
