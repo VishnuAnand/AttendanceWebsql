@@ -145,4 +145,20 @@
 
                 var minutesDiff = (outTime - inTime) / (1000 * 60); // Convert milliseconds to minutes
                 var hoursDiff = minutesDiff / 60; // Convert minutes to hours
-                totalHours
+                totalHours += hoursDiff;
+
+                console.log('In: ' + inTime + ', Out: ' + outTime + ', Hours: ' + hoursDiff);
+              }
+            }
+
+            resultDiv.text('Total Hours: ' + totalHours.toFixed(2));
+          });
+        });
+      }
+    });
+  </script>
+</head>
+<body>
+  <!-- Rest of your HTML content -->
+</body>
+</html>
