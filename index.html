@@ -29,18 +29,19 @@
       color: red;
     }
   </style>
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    $(document).ready(function () {
       var db = openDatabase('attendance', '1.0', 'Attendance Database', 2 * 1024 * 1024);
 
       db.transaction(function (tx) {
         tx.executeSql('CREATE TABLE IF NOT EXISTS log (id INTEGER PRIMARY KEY, type TEXT, timestamp DATETIME)');
       });
 
-      var inBtn = document.getElementById('inBtn');
-      var outBtn = document.getElementById('outBtn');
-      var resultDiv = document.getElementById('result');
-      var historyTable = document.getElementById('historyTable');
+      var inBtn = $('#inBtn');
+      var outBtn = $('#outBtn');
+      var resultDiv = $('#result');
+      var historyTable = $('#historyTable');
 
       // Check the last recorded event on page load
       db.transaction(function (tx) {
@@ -48,11 +49,11 @@
           var lastEvent = result.rows.item(0);
 
           if (lastEvent && lastEvent.type === 'in') {
-            inBtn.disabled = true;
-            outBtn.disabled = false;
+            inBtn.prop('disabled', true);
+            outBtn.prop('disabled', false);
           } else {
-            inBtn.disabled = false;
-            outBtn.disabled = true;
+            inBtn.prop('disabled', false);
+            outBtn.prop('disabled', true);
           }
         });
       });
@@ -69,28 +70,28 @@
         });
       });
 
-      inBtn.addEventListener('click', function () {
+      inBtn.on('click', function () {
         logEvent('in');
-        inBtn.disabled = true;
-        outBtn.disabled = false;
+        inBtn.prop('disabled', true);
+        outBtn.prop('disabled', false);
       });
 
-      outBtn.addEventListener('click', function () {
+      outBtn.on('click', function () {
         logEvent('out');
-        outBtn.disabled = true;
-        inBtn.disabled = false;
+        outBtn.prop('disabled', true);
+        inBtn.prop('disabled', false);
       });
 
-      document.getElementById('calculateBtn').addEventListener('click', calculateTotalHours);
+      $('#calculateBtn').on('click', calculateTotalHours);
 
       // Event listener for the "Reset" button
-      document.getElementById('resetBtn').addEventListener('click', function () {
+      $('#resetBtn').on('click', function () {
         db.transaction(function (tx) {
           tx.executeSql('DELETE FROM log');
         });
-        inBtn.disabled = false;
-        outBtn.disabled = true;
-        resultDiv.textContent = '';
+        inBtn.prop('disabled', false);
+        outBtn.prop('disabled', true);
+        resultDiv.text('');
         clearHistoryTable();
       });
 
@@ -105,23 +106,20 @@
       }
 
       function addToHistoryTable(type, timestamp) {
-        var row = historyTable.insertRow(1); // Insert at the beginning
-        var cellType = row.insertCell(0);
-        var cellTime = row.insertCell(1);
+        var row = $('<tr>');
+        var cellType = $('<td>').text(type.toUpperCase()).addClass(type);
+        var cellTime = $('<td>').text(formatAMPM(timestamp));
 
-        cellType.textContent = type.toUpperCase();
-        cellType.className = type; // Set class for styling
-        cellTime.textContent = formatAMPM(timestamp);
+        row.append(cellType, cellTime);
+        historyTable.prepend(row);
 
         // Clear the result div when a new entry is added
-        resultDiv.textContent = '';
+        resultDiv.text('');
       }
 
       function clearHistoryTable() {
         // Remove all rows except the header
-        while (historyTable.rows.length > 1) {
-          historyTable.deleteRow(1);
-        }
+        historyTable.find('tr:gt(0)').remove();
       }
 
       function formatAMPM(date) {
@@ -131,8 +129,7 @@
         hours = hours % 12;
         hours = hours ? hours : 12; // the hour '0' should be '12'
         minutes = minutes < 10 ? '0' + minutes : minutes;
-        var strTime = hours + ':' + minutes + ' ' + ampm;
-        return strTime;
+        return hours + ':' + minutes + ' ' + ampm;
       }
 
       function calculateTotalHours() {
@@ -154,7 +151,7 @@
               }
             }
 
-            resultDiv.textContent = 'Total Hours: ' + totalHours.toFixed(2);
+            resultDiv.text('Total Hours: ' + totalHours.toFixed(2));
           });
         });
       }
