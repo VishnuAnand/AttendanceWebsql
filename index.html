@@ -38,6 +38,15 @@
     }
   </style>
   <script>
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent Chrome from automatically showing the prompt
+      e.preventDefault();
+      // Show the add to home screen prompt manually
+      e.prompt();
+    });
+  </script>
+
+  <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./service-worker.js')
         .then((registration) => {
