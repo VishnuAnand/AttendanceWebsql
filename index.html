@@ -16,17 +16,14 @@
       var outBtn = document.getElementById('outBtn');
       var resultDiv = document.getElementById('result');
 
-      // Check the last recorded event
       db.transaction(function (tx) {
         tx.executeSql('SELECT * FROM log ORDER BY timestamp DESC LIMIT 1', [], function (tx, result) {
           var lastEvent = result.rows.item(0);
 
           if (lastEvent && lastEvent.type === 'in') {
-            // If the last event is "in", disable the "in" button and enable the "out" button
             inBtn.disabled = true;
             outBtn.disabled = false;
           } else {
-            // If the last event is "out" or there is no recorded event, enable the "in" button and disable the "out" button
             inBtn.disabled = false;
             outBtn.disabled = true;
           }
@@ -46,6 +43,16 @@
       });
 
       document.getElementById('calculateBtn').addEventListener('click', calculateTotalHours);
+
+      // Event listener for the "Reset" button
+      document.getElementById('resetBtn').addEventListener('click', function () {
+        db.transaction(function (tx) {
+          tx.executeSql('DELETE FROM log');
+        });
+        inBtn.disabled = false;
+        outBtn.disabled = true;
+        resultDiv.textContent = '';
+      });
 
       function logEvent(type) {
         db.transaction(function (tx) {
@@ -85,5 +92,11 @@
   <button id="outBtn" disabled>Out</button>
   <button id="calculateBtn">Calculate</button>
   <div id="result"></div>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <button id="resetBtn">Reset</button>
 </body>
 </html>
