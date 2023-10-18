@@ -72,7 +72,8 @@
                 var inTime = new Date(rows.item(i).timestamp);
                 var outTime = new Date(rows.item(i + 1).timestamp);
 
-                var hoursDiff = (outTime - inTime) / (1000 * 60 * 60);
+                var minutesDiff = (outTime - inTime) / (1000 * 60); // Convert milliseconds to minutes
+                var hoursDiff = minutesDiff / 60; // Convert minutes to hours
                 totalHours += hoursDiff;
 
                 console.log('In: ' + inTime + ', Out: ' + outTime + ', Hours: ' + hoursDiff);
@@ -91,12 +92,7 @@
   <button id="inBtn">In</button>
   <button id="outBtn" disabled>Out</button>
   <button id="calculateBtn">Calculate</button>
-  <div id="result"></div>
-  <br>
-  <br>
-  <br>
-  <br>
-  <br>
   <button id="resetBtn">Reset</button>
+  <div id="result"></div>
 </body>
 </html>
